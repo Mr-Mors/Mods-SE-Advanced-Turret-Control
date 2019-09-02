@@ -69,6 +69,13 @@ namespace Rearth.AdvancedTurretControl {
             if (Controller == null || Controller.MarkedForClose || Controller.Closed || !Controller.IsWorking || Controller.Pilot == null || MyAPIGateway.Gui.IsCursorVisible || MyAPIGateway.Session.Player == null || MyAPIGateway.Session.Player.Character == null || Controller.Pilot != MyAPIGateway.Session.Player.Character)
                 return;
 
+            // If cockpit does not include the following string do not allow turret control
+            if (!Controller.CustomName.Contains("ATC"))
+            {
+                return;
+            }
+
+            // Only activate if entity is a cockpit and right mouse is pressed, or if entiy is a "TurretController" and right mouse is pressed
             if (!MyAPIGateway.Input.IsRightMousePressed() && (((IMyCockpit)Entity).BlockDefinition.TypeId == typeof(MyObjectBuilder_Cockpit))
                 || !MyAPIGateway.Input.IsRightMousePressed() && Controller.BlockDefinition.SubtypeName.Contains("TurretController")
 	        ) {
