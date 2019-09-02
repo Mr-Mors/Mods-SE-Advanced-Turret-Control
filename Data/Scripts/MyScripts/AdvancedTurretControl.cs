@@ -14,10 +14,10 @@ using VRageMath;
 using BlendTypeEnum = VRageRender.MyBillboard.BlendTypeEnum;
 
 
-namespace Rearth.MissileController {
+namespace Rearth.AdvancedTurretControl {
 
-    [MyEntityComponentDescriptor(typeof(MyObjectBuilder_Cockpit), false/*, "TurretController", "TurretControllerSmall"*/)]
-    public class NukeSiloController : MyGameLogicComponent {
+    [MyEntityComponentDescriptor(typeof(MyObjectBuilder_Cockpit), false)]
+    public class AdvancedTurretController : MyGameLogicComponent {
 
         private Boolean controller = false;
 
@@ -71,7 +71,7 @@ namespace Rearth.MissileController {
 
             if (!MyAPIGateway.Input.IsRightMousePressed() && (((IMyCockpit)Entity).BlockDefinition.TypeId == typeof(MyObjectBuilder_Cockpit))
                 || !MyAPIGateway.Input.IsRightMousePressed() && Controller.BlockDefinition.SubtypeName.Contains("TurretController")
-	    ) {
+	        ) {
                 return;
             }
 
