@@ -24,7 +24,7 @@ namespace Rearth.MissileController {
         private IMyCockpit Controller;
         public override void Init(MyObjectBuilder_EntityBase objectBuilder) {
 		
-            if (((IMyCockpit)Entity).BlockDefinition.SubtypeName.Contains("TurretController")) {
+            if (((IMyCockpit)Entity).BlockDefinition.TypeId == typeof(MyObjectBuilder_Cockpit)) {
                 controller = true;
             } else {
                 return;
@@ -69,9 +69,9 @@ namespace Rearth.MissileController {
             if (Controller == null || Controller.MarkedForClose || Controller.Closed || !Controller.IsWorking || Controller.Pilot == null || MyAPIGateway.Gui.IsCursorVisible || MyAPIGateway.Session.Player == null || MyAPIGateway.Session.Player.Character == null || Controller.Pilot != MyAPIGateway.Session.Player.Character)
                 return;
 
-            if (!MyAPIGateway.Input.IsAnyAltKeyPressed() && Controller.BlockDefinition.SubtypeName.Equals("TurretControllerSmall")
-		|| !MyAPIGateway.Input.IsAnyAltKeyPressed() && Controller.BlockDefinition.SubtypeName.Equals("TurretController")
-		) {
+            if (!MyAPIGateway.Input.IsRightMousePressed() && (((IMyCockpit)Entity).BlockDefinition.TypeId == typeof(MyObjectBuilder_Cockpit))
+                || !MyAPIGateway.Input.IsRightMousePressed() && Controller.BlockDefinition.SubtypeName.Contains("TurretController")
+	    ) {
                 return;
             }
 
