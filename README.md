@@ -12,7 +12,7 @@ This is my Retro edition of ATC. This is a stale branch of my mod incase you per
  [*] All turrets by default being controlled instead of the new opt-in style
 [list]
 
-To view the my supported version of this mod please navigate to [url=https://steamcommunity.com/sharedfiles/filedetails/?id=]Advanced Turret Control[/url]
+To view the my supported version of this mod please navigate to [url=https://shttps://steamcommunity.com/sharedfiles/filedetails/?id=1688821171]Advanced Turret Control[/url]
 
 [b]Original description bellow:[/b]
 
