@@ -24,8 +24,7 @@ namespace Rearth.MissileController {
         private IMyCockpit Controller;
         public override void Init(MyObjectBuilder_EntityBase objectBuilder) {
 		
-	    if (((IMyCockpit)Entity).BlockDefinition.TypeId == typeof(MyObjectBuilder_Cockpit)) {
-//            if (((IMyCockpit)Entity).BlockDefinition.SubtypeName.Contains("TurretController")) {
+            if (((IMyCockpit)Entity).BlockDefinition.SubtypeName.Contains("TurretController")) {
                 controller = true;
             } else {
                 return;
