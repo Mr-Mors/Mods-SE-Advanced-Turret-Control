@@ -10,9 +10,11 @@ This is my Retro edition of ATC. This is a stale branch of my mod incase you per
  [*] Activating turret control with alt instead of the new right-click method
  [*] Only controlling turrets with the custom Turret Control Cockpit
  [*] All turrets by default being controlled instead of the new opt-in style
-[list]
+[/list]
 
-To view the my supported version of this mod please navigate to [url=https://shttps://steamcommunity.com/sharedfiles/filedetails/?id=1688821171]Advanced Turret Control[/url]
+To view the my supported version of this mod please navigate to [url=https://steamcommunity.com/sharedfiles/filedetails/?id=1688821171]Advanced Turret Control[/url]
+
+
 
 [b]Original description bellow:[/b]
 
