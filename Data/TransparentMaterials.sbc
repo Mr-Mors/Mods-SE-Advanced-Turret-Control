@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <TransparentMaterials>
+	<TransparentMaterial>
+	<Id>
+	<TypeId>TransparentMaterialDefinition</TypeId>
+	<SubtypeId>Crosshair_Center</SubtypeId>
+	</Id> 
+	<AlphaMistingEnable>false</AlphaMistingEnable>
+	<CanBeAffectedByOtherLights>false</CanBeAffectedByOtherLights>
+	<Emissivity>0</Emissivity>
+    <AlphaSaturation>1</AlphaSaturation>
+	<Reflection>false</Reflection>
+	<IgnoreDepth>false</IgnoreDepth>
+	<SoftParticleDistanceScale>2000</SoftParticleDistanceScale>
+	<Texture>Textures\crosshair_center.dds</Texture>
+	<UseAtlas>false</UseAtlas>
+	<UVOffset>
+	<X>0</X>
+	<Y>0</Y>
+	</UVOffset>
+	<UVSize>
+	<X>1</X>
+	<Y>1</Y>
+	</UVSize>
+	</TransparentMaterial>
+
+	<TransparentMaterial>
+	<Id>
+	<TypeId>TransparentMaterialDefinition</TypeId>
+	<SubtypeId>Crosshair</SubtypeId>
+	</Id> 
+	<AlphaMistingEnable>false</AlphaMistingEnable>
+	<CanBeAffectedByOtherLights>false</CanBeAffectedByOtherLights>
+	<Emissivity>0</Emissivity>
+	<Reflection>false</Reflection>
+	<IgnoreDepth>false</IgnoreDepth>
+	<SoftParticleDistanceScale>1000</SoftParticleDistanceScale>
+	<Texture>Textures\Crosshair.dds</Texture>
+	<UseAtlas>false</UseAtlas>
+	<UVOffset>
+	<X>0</X>
+	<Y>0</Y>
+	</UVOffset>
+	<UVSize>
+	<X>1</X>
+	<Y>1</Y>
+	</UVSize>
+	</TransparentMaterial>
+	
+  </TransparentMaterials>
+</Definitions>
