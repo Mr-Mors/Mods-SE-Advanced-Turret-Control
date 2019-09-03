@@ -100,11 +100,21 @@ namespace Rearth.AdvancedTurretControl {
             Vector3D startDir = Vector3.Normalize(view.Forward);
             startDir *= 2000;
 
-            Vector3 upwards = MyAPIGateway.Session.Camera.WorldMatrix.Up;
-            upwards.Normalize();
-            upwards *= 550;
 
-            Vector3D endPos = startPos + startDir + upwards;
+            Vector3D endPos;
+            //If in third person we want to raise the crosshair for easy of targeting.
+            if (!Controller.IsInFirstPersonView)
+            {
+                Vector3 upwards = MyAPIGateway.Session.Camera.WorldMatrix.Up;
+                upwards.Normalize();
+                upwards *= 550;
+
+                endPos = startPos + startDir + upwards;
+            } else
+            {
+                endPos = startPos + startDir;
+            }
+
 
             VRage.Game.ModAPI.IMyCubeGrid grid = Controller.CubeGrid;
             Vector3D target = getAimPosition(startPos, endPos, grid);
@@ -130,7 +140,8 @@ namespace Rearth.AdvancedTurretControl {
             
             foreach (IMyLargeTurretBase elem in Turrets) {
 
-                if (elem.ToString().ToLower().Contains("exclude")) {
+                //if (elem.ToString().ToLower().Contains("exclude")) {
+                if (!elem.ToString().ToLower().Contains("atc")) {
                     continue;
                 }
 
