@@ -140,8 +140,8 @@ namespace Rearth.AdvancedTurretControl {
             
             foreach (IMyLargeTurretBase elem in Turrets) {
 
-                //if (elem.ToString().ToLower().Contains("exclude")) {
-                if (!elem.ToString().ToLower().Contains("atc")) {
+                //Only control turret if it contains the string "atc" and is not currently under user control
+                if ((!elem.ToString().ToLower().Contains("atc")) || (elem.IsUnderControl)) {
                     continue;
                 }
 
