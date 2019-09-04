@@ -30,7 +30,7 @@ namespace Rearth.AdvancedTurretControl {
                 return;
             }
 
-            /*Entity.*/NeedsUpdate |= MyEntityUpdateEnum.BEFORE_NEXT_FRAME;
+            NeedsUpdate |= MyEntityUpdateEnum.BEFORE_NEXT_FRAME;
         }
 
         public override void UpdateOnceBeforeFrame() {
@@ -39,8 +39,6 @@ namespace Rearth.AdvancedTurretControl {
             NeedsUpdate |= MyEntityUpdateEnum.EACH_FRAME;
 
         }
-
-        private float ticks = 0;
 
         private Boolean fired;
         private IMyEntity targeting;
@@ -53,35 +51,30 @@ namespace Rearth.AdvancedTurretControl {
 
         public override void UpdateBeforeSimulation() {
 
-            if (!controller) {
+            // Only run script on valid, working, piloted cockpits.
+            if (!controller ||
+                Controller == null ||
+                Controller.MarkedForClose ||
+                Controller.Closed ||
+                !Controller.IsWorking ||
+                Controller.Pilot == null ||
+                MyAPIGateway.Gui.IsCursorVisible ||
+                MyAPIGateway.Session.Player == null ||
+                MyAPIGateway.Session.Player.Character == null ||
+                Controller.Pilot != MyAPIGateway.Session.Player.Character ||
+                // If cockpit does not include the following string do not allow turret control
+                !Controller.CustomName.Contains("ATC") ||
+                // Only activate if Right Mouse is pressed
+                (!MyAPIGateway.Input.IsRightMousePressed() && (((IMyCockpit)Entity).BlockDefinition.TypeId == typeof(MyObjectBuilder_Cockpit)))
+            ) {
                 return;
             }
-            
-            //MyLog.Default.WriteLine("executing after simulation, look here");
 
-            ticks++;
-
-
+            // I'm not quite sure if the following two if statements do anything useful. They may help with performance.
+            // If pilot is not present, wait 60 ticks before checking again 
             if (Controller.Pilot == null) {
                 waitForNew = true;
             }
-
-            if (Controller == null || Controller.MarkedForClose || Controller.Closed || !Controller.IsWorking || Controller.Pilot == null || MyAPIGateway.Gui.IsCursorVisible || MyAPIGateway.Session.Player == null || MyAPIGateway.Session.Player.Character == null || Controller.Pilot != MyAPIGateway.Session.Player.Character)
-                return;
-
-            // If cockpit does not include the following string do not allow turret control
-            if (!Controller.CustomName.Contains("ATC"))
-            {
-                return;
-            }
-
-            // Only activate if entity is a cockpit and right mouse is pressed, or if entiy is a "TurretController" and right mouse is pressed
-            if (!MyAPIGateway.Input.IsRightMousePressed() && (((IMyCockpit)Entity).BlockDefinition.TypeId == typeof(MyObjectBuilder_Cockpit))
-                || !MyAPIGateway.Input.IsRightMousePressed() && Controller.BlockDefinition.SubtypeName.Contains("TurretController")
-	        ) {
-                return;
-            }
-
             if (!waitForNew) {
                 fired = MyAPIGateway.Input.IsLeftMousePressed();
             } else {
@@ -93,47 +86,49 @@ namespace Rearth.AdvancedTurretControl {
                 }
             }
                 
-            var view = MyAPIGateway.Session.Camera.WorldMatrix;
-
-            //Ray directionRay = new Ray(view2.Translation, Vector3.Normalize(view.Forward));
+            //Get current camera position in space
             Vector3D startPos = MyAPIGateway.Session.Camera.WorldMatrix.Translation;
-            Vector3D startDir = Vector3.Normalize(view.Forward);
-            startDir *= 2000;
 
+            //Acting as though our camera with current rotation is located at 0:0:0,
+            // add 2000m in the foward direction and save this new cordinate as forwards.
+            Vector3D forwards = MyAPIGateway.Session.Camera.WorldMatrix.Forward;
+            forwards.Normalize();
+            forwards *= 2000;
+            
+            //Acting as though our camera with current rotation is located at 0:0:0,
+            // add 550m in the upward direction and save this new cordinate as forwards.
+            Vector3 upwards = MyAPIGateway.Session.Camera.WorldMatrix.Up;
+            upwards.Normalize();
+            upwards *= 550;
 
+            //We now can add our forwards cordinates to our startPos to get a targeting position.
+            // When in third person having the target directly infront of our view camera position
+            // can be a bit hard to aim. We can move this up by adding the upwards cordinate as well.
             Vector3D endPos;
-            //If in third person we want to raise the crosshair for easy of targeting.
-            if (!Controller.IsInFirstPersonView)
-            {
-                Vector3 upwards = MyAPIGateway.Session.Camera.WorldMatrix.Up;
-                upwards.Normalize();
-                upwards *= 550;
-
-                endPos = startPos + startDir + upwards;
-            } else
-            {
-                endPos = startPos + startDir;
+            if (!Controller.IsInFirstPersonView) {
+                endPos = startPos + forwards + upwards;
+            } else {
+                endPos = startPos + forwards;
             }
 
-
+            //Finally take this endPos and check if there is a target along the between the startPos 
+            // and endPos. If a grid is detected, set targetPos.
             VRage.Game.ModAPI.IMyCubeGrid grid = Controller.CubeGrid;
             Vector3D target = getAimPosition(startPos, endPos, grid);
             targetPos = target;
 
+            //Draw crosshair overlays now that we know location of endPos and targetPos
             updateCamera();
 
             hasCamTarget = false;
             Sandbox.ModAPI.Ingame.IMyGridTerminalSystem GridTerminalSystem = MyAPIGateway.TerminalActionsHelper.GetTerminalSystemForGrid(grid);
 
+            //Check if there is a group with same name as current cockpit. If so we will only
+            // controll those turrets, otherwise control all turrets.
             List<IMyLargeTurretBase> Turrets = new List<IMyLargeTurretBase>();
-
-            //MyLog.Default.WriteLine("Controller name: " + Controller.CustomName.ToString());
-            //GridTerminalSystem.GetBlocksOfType(Turrets);
-
             try {
                 IMyBlockGroup group = (IMyBlockGroup) GridTerminalSystem.GetBlockGroupWithName(Controller.CustomName.ToString());
                 group.GetBlocksOfType(Turrets);
-                //MyLog.Default.WriteLine("found block in group!");
             } catch (NullReferenceException) {
                 GridTerminalSystem.GetBlocksOfType(Turrets);
             }
@@ -220,8 +215,8 @@ namespace Rearth.AdvancedTurretControl {
             }
         }
 
+        //Function to check if targeting own grid, only fire if not own grid.
         public static Boolean targetIsFine(IMyLargeTurretBase elem, VRage.Game.ModAPI.IMyCubeGrid grid, Vector3D targetPos) {
-
             var gun = elem as IMyGunObject<Sandbox.Game.Weapons.MyGunBase>;
             var matrix = gun.GunBase.GetMuzzleWorldMatrix();
 
@@ -246,7 +241,6 @@ namespace Rearth.AdvancedTurretControl {
                 }
                 return true;
             }
-
             return true;
         }
 
@@ -363,25 +357,23 @@ namespace Rearth.AdvancedTurretControl {
             return to;
         }
 
-        private static IMyEntity getAimEntity(Vector3D from, Vector3D to, VRage.Game.ModAPI.IMyCubeGrid grid) {
-
-
-            List<VRage.Game.ModAPI.IHitInfo> hits = new List<VRage.Game.ModAPI.IHitInfo>();
-            MyAPIGateway.Physics.CastRay(from, to, hits);
-
-            if (hits.Count > 0) {
-                foreach (VRage.Game.ModAPI.IHitInfo hit in hits) {
-                    //MyLog.Default.WriteLine("Entity aim name (entity search): " + hit.HitEntity.ToString());
-                    
-                    if (hit.HitEntity.ToString().Contains("Grid") && hit.HitEntity.EntityId != grid.EntityId) {
-                        //MyLog.Default.WriteLine("targeting grid! (entity search)");
-                        return hit.HitEntity;
-                    }
-                }
-            }
-
-            return null;
-        }
+// Planned removal, don't believe code is being used.
+//        private static IMyEntity getAimEntity(Vector3D from, Vector3D to, VRage.Game.ModAPI.IMyCubeGrid grid) {
+//            List<VRage.Game.ModAPI.IHitInfo> hits = new List<VRage.Game.ModAPI.IHitInfo>();
+//            MyAPIGateway.Physics.CastRay(from, to, hits);
+//
+//            if (hits.Count > 0) {
+//                foreach (VRage.Game.ModAPI.IHitInfo hit in hits) {
+//                    //MyLog.Default.WriteLine("Entity aim name (entity search): " + hit.HitEntity.ToString());
+//                    
+//                    if (hit.HitEntity.ToString().Contains("Grid") && hit.HitEntity.EntityId != grid.EntityId) {
+//                        //MyLog.Default.WriteLine("targeting grid! (entity search)");
+//                        return hit.HitEntity;
+//                    }
+//                }
+//            }
+//            return null;
+//        }
 
         public static float getRotationSpeedLimit(string subTypeId) {
             //PlasmaTurret
