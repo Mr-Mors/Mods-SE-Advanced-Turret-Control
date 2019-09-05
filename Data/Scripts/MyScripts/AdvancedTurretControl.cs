@@ -34,17 +34,14 @@ namespace Rearth.AdvancedTurretControl {
         }
 
         public override void UpdateOnceBeforeFrame() {
-
             Controller = Entity as IMyCockpit;
             NeedsUpdate |= MyEntityUpdateEnum.EACH_FRAME;
-
         }
 
         private Boolean fired;
         private IMyEntity targeting;
 
         private Vector3D targetPos;
-        private int updateCount = 0;
 
         private Boolean waitForNew = false;
         private int wait = 0;
@@ -140,6 +137,7 @@ namespace Rearth.AdvancedTurretControl {
                     continue;
                 }
 
+                //Get current rotation speeds
                 double azimuth = 0;
                 double elevation = 0;
                 Vector3D TargetLook = Vector3D.TransformNormal(elem.GetPosition() - targetPos, MatrixD.Invert(MatrixD.CreateFromDir(elem.WorldMatrix.Forward, elem.WorldMatrix.Up)));
@@ -150,18 +148,18 @@ namespace Rearth.AdvancedTurretControl {
 
                 Vector3D.GetAzimuthAndElevation(TargetLook, out azimuth, out elevation);
 
-                //MyLog.Default.WriteLine("Aim global pos: " + targetPos + " targetLook=" + TargetLook + " azimuth=" + azimuth + " elevation=" + elevation);
-
+                //Zero out elevation of not valid number
                 if ((Double.IsNaN(elevation) || Double.IsPositiveInfinity(elevation) || Double.IsNegativeInfinity(elevation))) {
                     elevation = 0F;
                 }
 
+                //Lookup turret from list of known turrets and set max rotation speed
                 double maxRotationSpeed = getRotationSpeedLimit(elem.BlockDefinition.SubtypeId) * 16;
                 double maxElevationSpeed = getElevationSpeedLimit(elem.BlockDefinition.SubtypeId) * 16;
                 double ElevationChange, AzimuthChange;
                 Boolean specialRotation = maxRotationSpeed < 0.002f || maxElevationSpeed < 0.002f;
-                //specialRotation = true;
-                
+
+                //Using max speeds calculate rotation speed
                 if (specialRotation) {
                     if (Math.Abs(azimuth - elem.Azimuth) > maxRotationSpeed) {
                         if (azimuth - elem.Azimuth >= 0) {
@@ -187,24 +185,21 @@ namespace Rearth.AdvancedTurretControl {
                     ElevationChange = elevation - elem.Elevation;
                 }
 
-                //MyLog.Default.WriteLine("applying rotation change: " +AzimuthChange + "; " + ElevationChange );
+                //Apply calculated rotation speeds
                 elem.Azimuth += (float) AzimuthChange;
                 elem.Elevation += (float) ElevationChange;
-                
-                //float rotationSpeed = (((MyLargeTurretBase)elem)).BlockDefinition.RotationSpeed;
-                //float elevationSpeed = (((MyLargeTurretBase)elem)).BlockDefinition.ElevationSpeed;
 
                 elem.SyncAzimuth();
                 elem.SyncElevation();
 
+                //Check if rotation speed is at limit
                 Boolean atLimit = false;
                 if (Math.Abs(elem.Azimuth - azimuth) > 0.05 || Math.Abs(elem.Elevation - elevation) > 0.05) {
                     atLimit = true;
                 }
                 
+                //Check if our ship is not in the way. If clear shoot.
                 if (fired) {
-                    //check if ship is not in the way
-                    //Boolean notintersecting = TestScript.TestScript.targetIsFine(elem, grid, targetPos);
                     Boolean notintersecting = targetIsFine(elem, grid, targetPos);
 
                     if (notintersecting && !atLimit) {
@@ -228,11 +223,8 @@ namespace Rearth.AdvancedTurretControl {
             to.Z *= 200;
             to += from;
 
-            //VRageRender.MyRenderProxy.DebugDrawLine3D(from, to, Color.White, Color.OrangeRed, false);
-
             List<VRage.Game.ModAPI.IHitInfo> hits = new List<VRage.Game.ModAPI.IHitInfo>();
             MyAPIGateway.Physics.CastRay(from, to, hits);
-            //MyLog.Default.WriteLine("raycast from: " + from + " to=" + to + " hitcount:" + hits.Count);
 
             if (hits.Count > 0) {
                 //MyLog.Default.WriteLine(" first hit=" + hits[0].HitEntity.ToString() + " own grid=" + grid.ToString());
@@ -247,7 +239,6 @@ namespace Rearth.AdvancedTurretControl {
         Boolean hasCamTarget = false;
 
         private void updateCamera(IMyEntity target) {
-
             if (target == null) {
                 return;
             }
@@ -264,23 +255,15 @@ namespace Rearth.AdvancedTurretControl {
             center.Y += box.HalfExtents.Y;
             center.Z += box.HalfExtents.Z;
 
-
             try {
                 MyTransparentGeometry.AddBillboardOriented(Material, Color.WhiteSmoke.ToVector4(), center, MyAPIGateway.Session.Camera.WorldMatrix.Left, MyAPIGateway.Session.Camera.WorldMatrix.Up, height, BlendTypeEnum.SDR);
             } catch (NullReferenceException ex) {
                 //MyLog.Default.Error("Error while drawing billboard: " + ex);
             }
                 //MyLog.Default.WriteLine("Drawing Billbord at: " + center);
-
         }
 
         private void updateCamera() {
-
-
-            /*if (hasCamTarget) {
-                drawAt = targetPos - (targetPos - startPos) * 0.2;
-            }*/
-            
             Vector3D startPos = MyAPIGateway.Session.Camera.WorldMatrix.Translation;
             Vector3 dirA = targetPos - startPos;
             float distance = dirA.Length();
@@ -320,26 +303,15 @@ namespace Rearth.AdvancedTurretControl {
             if (!controller) {
                 return;
             }
-            //MyLog.Default.WriteLine("executing before simulation");
 
             if (Controller == null || Controller.MarkedForClose || Controller.Closed || !Controller.IsWorking)
                 return;
 
-
-            if (updateCount == 0) {
-                return;
-            }
-
-            updateCount--;
-
             VRage.Game.ModAPI.IMyCubeGrid grid = Controller.CubeGrid;
             Sandbox.ModAPI.Ingame.IMyGridTerminalSystem GridTerminalSystem = MyAPIGateway.TerminalActionsHelper.GetTerminalSystemForGrid(grid);
-
         }
 
         private Vector3D getAimPosition(Vector3D from, Vector3D to, VRage.Game.ModAPI.IMyCubeGrid grid) {
-
-
             List<VRage.Game.ModAPI.IHitInfo> hits = new List<VRage.Game.ModAPI.IHitInfo>();
             MyAPIGateway.Physics.CastRay(from, to, hits);
 
@@ -356,24 +328,6 @@ namespace Rearth.AdvancedTurretControl {
 
             return to;
         }
-
-// Planned removal, don't believe code is being used.
-//        private static IMyEntity getAimEntity(Vector3D from, Vector3D to, VRage.Game.ModAPI.IMyCubeGrid grid) {
-//            List<VRage.Game.ModAPI.IHitInfo> hits = new List<VRage.Game.ModAPI.IHitInfo>();
-//            MyAPIGateway.Physics.CastRay(from, to, hits);
-//
-//            if (hits.Count > 0) {
-//                foreach (VRage.Game.ModAPI.IHitInfo hit in hits) {
-//                    //MyLog.Default.WriteLine("Entity aim name (entity search): " + hit.HitEntity.ToString());
-//                    
-//                    if (hit.HitEntity.ToString().Contains("Grid") && hit.HitEntity.EntityId != grid.EntityId) {
-//                        //MyLog.Default.WriteLine("targeting grid! (entity search)");
-//                        return hit.HitEntity;
-//                    }
-//                }
-//            }
-//            return null;
-//        }
 
         public static float getRotationSpeedLimit(string subTypeId) {
             //PlasmaTurret
